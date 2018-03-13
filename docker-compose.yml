@@ -1,0 +1,15 @@
+version: '2'
+services:
+  php:
+    image: customphp72
+    build: .
+    depends_on:
+      - fluentd
+    volumes:
+      - ./app/test-script.php:/usr/src/app/test-script.php
+  fluentd:
+    image: fluent/fluentd:v1.1
+    volumes:
+      - ./configs/custom_fluent.conf:/fluentd/etc/custom_fluent.conf
+    environment:
+      FLUENTD_CONF: custom_fluent.conf
