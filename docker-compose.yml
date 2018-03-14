@@ -1,15 +1,39 @@
-version: '2'
+version: '2.2'
 services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.2.2
+    container_name: elasticsearch
+    environment:
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - esdata1:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
   php:
     image: customphp72
-    build: .
+    build:
+      context: .
+      dockerfile: ./custom-php/Dockerfile
     depends_on:
+      - elasticsearch
       - fluentd
     volumes:
       - ./app/test-script.php:/usr/src/app/test-script.php
   fluentd:
-    image: fluent/fluentd:v1.1
+    image: fluentd:custom-v1.1
+    build: ./custom-fluentd
+    depends_on:
+      - elasticsearch
     volumes:
-      - ./configs/custom_fluent.conf:/fluentd/etc/custom_fluent.conf
+      - ./custom-fluentd/fluent.conf:/fluentd/etc/fluent.conf
     environment:
-      FLUENTD_CONF: custom_fluent.conf
+      FLUENTD_CONF: fluent.conf
+
+volumes:
+  esdata1:
+    driver: local
